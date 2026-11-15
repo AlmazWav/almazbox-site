@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b0c0e"/>
+  <meta name="robots" content="noindex"/>
+  <title>AlmazBox Demo | Jogue grátis</title>
+
+  <!-- ============================================================
+       ALMAZBOX DEMO: área de quem ainda não comprou.
+       Baixa o "AlmazBox Demo" (1 jogo de PS2 grátis por computador),
+       ensina a jogar e mostra a oferta de quem testou.
+       Mora no GitHub Pages (almazbox.almazstore.com.br/demo) e conversa
+       com o servidor do Render: instalador em /api/v1/demo/installer (R2),
+       jogos em /api/v1/demo/games. Rotas em license-service/demoRoutes.mjs.
+       ============================================================ -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="icon" href="/favicon.ico" sizes="any"/>
+  <link rel="icon" type="image/svg+xml" href="/assets/marca/almazbox-favicon.svg"/>
+  <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="membro-kit.css">
+  <style>
+    :root { --gold: #f5c451; --gold-deep: #c9932b; --on-gold: #1a1205; }
+    .brand-name small { font-size: .55em; color: var(--muted); margin-left: 3px; letter-spacing: .12em; }
+    .side-card .tier-pill { background: rgb(245 196 81 / .16); color: var(--gold); }
+
+    /* Botão dourado da demo */
+    .kbtn.gold {
+      position: relative; overflow: hidden;
+      background: linear-gradient(180deg, #ffd873 0%, var(--gold) 45%, var(--gold-deep) 100%);
+      color: var(--on-gold); font-weight: 800;
+      box-shadow: 0 12px 30px -12px rgb(245 196 81 / .7), inset 0 1px 0 rgb(255 255 255 / .45);
+    }
+    .kbtn.gold::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / .55) 50%, transparent 65%);
+      transform: translateX(-120%); animation: sheen 4.2s cubic-bezier(.23,1,.32,1) 1.4s infinite;
+    }
+    .kbtn.gold:hover { filter: brightness(1.06); }
+    .kbtn.gold:active { transform: scale(.97); }
+    @keyframes sheen { 0% { transform: translateX(-120%); } 35%, 100% { transform: translateX(120%); } }
+
+    /* HERO */
+    .demo-hero {
+      position: relative; overflow: hidden; isolation: isolate;
+      display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 28px; align-items: center;
+      min-height: 460px; padding: 44px 44px; border-radius: 24px;
+      background: radial-gradient(520px 380px at 12% 10%, rgb(245 196 81 / .16), transparent 70%), linear-gradient(160deg, #1a1712, #0f0e0c);
+      box-shadow: inset 0 0 0 1px rgb(245 196 81 / .18), 0 30px 80px -40px rgb(0 0 0 / .9);
+    }
+    .demo-kicker { display: inline-flex; align-items: center; gap: 10px; color: var(--gold); font-family: 'Archivo Kit', sans-serif; font-weight: 800; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+    .demo-kicker i { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: pulse 2.4s ease-out infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgb(245 196 81 / .55); } 70%, 100% { box-shadow: 0 0 0 9px rgb(245 196 81 / 0); } }
+    .demo-hero h2 { margin: 16px 0 14px; font-size: clamp(34px, 4.2vw, 56px); line-height: 1.02; letter-spacing: -.01em; text-wrap: balance; }
+    .demo-hero h2 em { font-style: normal; color: var(--gold); }
+    .demo-hero p.lead2 { color: var(--muted); font-size: 17px; line-height: 1.6; max-width: 520px; }
+    .demo-hero p.lead2 b { color: var(--text); }
+    .demo-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; align-items: center; }
+    .demo-actions .kbtn { width: auto; }
+    .demo-meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; color: var(--muted-2); font-size: 13px; }
+    .demo-meta span { display: inline-flex; align-items: center; gap: 7px; }
+
+    .wall { position: relative; height: 420px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; transform: rotate(-5deg); mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent); }
+    .wall-col { display: flex; flex-direction: column; gap: 12px; animation: drift 44s linear infinite; }
+    .wall-col:nth-child(2) { animation-direction: reverse; animation-duration: 52s; }
+    .wall-col:nth-child(3) { animation-duration: 38s; }
+    .wall-col img { width: 100%; aspect-ratio: .72; object-fit: cover; border-radius: 10px; box-shadow: 0 14px 30px -14px rgb(0 0 0 / .9); }
+    @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+
+    /* PASSOS */
+    .how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .how-card { position: relative; padding: 24px; border-radius: 18px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+    .how-card .n { position: absolute; top: 18px; right: 20px; font-family: 'Archivo Kit', sans-serif; font-weight: 800; font-size: 44px; line-height: 1; color: rgb(245 196 81 / .16); }
+    .how-card .ic { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: rgb(245 196 81 / .12); color: var(--gold); font-size: 19px; margin-bottom: 16px; }
+    .how-card h4 { font-size: 18px; margin-bottom: 8px; }
+    .how-card p { color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+    .how-card p b { color: var(--text); }
+
+    /* JOGOS DE PS2 */
+    .ps2-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 14px; }
+    .ps2-grid figure { position: relative; margin: 0; }
+    .ps2-grid img { width: 100%; aspect-ratio: .7; object-fit: cover; border-radius: 10px; box-shadow: 0 12px 24px -14px rgb(0 0 0 / .9), inset 0 0 0 1px rgb(255 255 255 / .06); transition: transform .28s cubic-bezier(.23,1,.32,1); }
+    @media (hover: hover) and (pointer: fine) { .ps2-grid figure:hover img { transform: translateY(-5px) scale(1.03); } }
+    .ps2-grid figcaption { margin-top: 8px; color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+    .ps2-skel { aspect-ratio: .7; border-radius: 10px; background: linear-gradient(100deg, var(--ink-1) 40%, var(--ink-2) 50%, var(--ink-1) 60%) 0 0 / 300% 100%; animation: sk 1.4s linear infinite; }
+    @keyframes sk { to { background-position: -150% 0; } }
+
+    /* FAQ */
+    .faq { display: grid; gap: 10px; }
+    .faq details { border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); padding: 0 20px; }
+    .faq summary { cursor: pointer; list-style: none; padding: 18px 0; font-weight: 700; display: flex; justify-content: space-between; gap: 16px; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary i { color: var(--muted-2); transition: transform .2s ease; }
+    .faq details[open] summary i { transform: rotate(45deg); color: var(--gold); }
+    .faq details p { color: var(--muted); padding: 0 0 18px; line-height: 1.65; font-size: 14.5px; }
+    .faq details p b { color: var(--text); }
+
+    /* OFERTA */
+    .offer {
+      position: relative; overflow: hidden;
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 30px; align-items: center;
+      padding: 38px 40px; border-radius: 24px;
+      background: radial-gradient(600px 300px at 100% 0%, rgb(245 196 81 / .2), transparent 70%), linear-gradient(160deg, #221d14, #12110e);
+      box-shadow: inset 0 0 0 1px rgb(245 196 81 / .3);
+    }
+    .offer h3 { font-size: clamp(26px, 3vw, 38px); line-height: 1.08; margin: 12px 0 14px; }
+    .offer h3 em { font-style: normal; color: var(--gold); }
+    .offer ul { list-style: none; display: grid; gap: 9px; margin: 0; padding: 0; }
+    .offer li { display: flex; gap: 10px; color: var(--text); font-size: 15px; }
+    .offer li i { color: var(--gold); margin-top: 4px; }
+    .price-box { text-align: center; min-width: 280px; padding: 26px; border-radius: 20px; background: rgb(0 0 0 / .28); box-shadow: inset 0 0 0 1px rgb(245 196 81 / .22); }
+    .price-tag { display: inline-block; padding: 5px 11px; border-radius: 999px; background: rgb(245 196 81 / .14); color: var(--gold); font-family: 'Archivo Kit', sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+    .price-old { display: block; margin-top: 14px; color: var(--muted-2); text-decoration: line-through; font-size: 17px; }
+    .price-new { display: block; font-family: 'Archivo Kit', sans-serif; font-weight: 850; font-size: 56px; line-height: 1; color: var(--gold); letter-spacing: -.02em; margin: 4px 0 6px; }
+    .price-once { display: block; color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+    .price-box .kbtn { width: 100%; justify-content: center; }
+    .price-box a.small { display: block; margin-top: 14px; color: var(--muted); font-size: 13px; }
+
+    .note-win { display: flex; gap: 12px; align-items: flex-start; margin-top: 18px; padding: 14px 16px; border-radius: 14px; background: rgb(102 192 244 / .08); box-shadow: inset 0 0 0 1px rgb(102 192 244 / .2); color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .note-win[hidden] { display: none; }
+    .only-phone { display: none; }
+    @media (hover: none) and (pointer: coarse) { .only-phone { display: flex; } }
+    .note-win i { color: var(--steam); margin-top: 3px; }
+    .note-win b { color: var(--text); }
+
+    @media (max-width: 1080px) {
+      .demo-hero { grid-template-columns: 1fr; }
+      .wall { height: 260px; }
+      .offer { grid-template-columns: 1fr; }
+      .price-box { min-width: 0; }
+    }
+    @media (max-width: 760px) {
+      .how { grid-template-columns: 1fr; }
+      .demo-hero, .offer { padding: 26px 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .wall-col, .kbtn.gold::after, .demo-kicker i { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><img src="/assets/marca/almazbox-app-icon.svg" alt=""></div>
+      <div>
+        <div class="brand-name"><img class="brand-logo" src="/assets/marca/almazbox-horizontal-branco.svg" alt="AlmazBox"></div>
+        <div class="brand-sub">Demo grátis</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Demo</div>
+      <a href="#baixar" class="active" data-nav><i class="fa-solid fa-download"></i> Baixar a demo</a>
+      <a href="#como" data-nav><i class="fa-solid fa-gamepad"></i> Como jogar</a>
+      <a href="#jogos" data-nav><i class="fa-solid fa-compact-disc"></i> Jogos de PS2</a>
+      <a href="#duvidas" data-nav><i class="fa-solid fa-circle-question"></i> Dúvidas</a>
+      <div class="nav-label">AlmazBox completo</div>
+      <a href="#oferta" data-nav><i class="fa-solid fa-crown"></i> Liberar tudo</a>
+      <a href="https://almazbox-license-service-el2u.onrender.com/membros"><i class="fa-solid fa-right-to-bracket"></i> Já sou cliente</a>
+    </nav>
+
+    <div class="side-card">
+      <span class="tier-pill"><i class="fa-solid fa-gift"></i> DEMO</span>
+      <h4>1 jogo de PS2 grátis</h4>
+      <p>Escolha no launcher e jogue completo, sem cadastro.</p>
+    </div>
+  </aside>
+
+  <main class="main" id="topo">
+
+    <div class="topbar">
+      <div class="greeting">
+        <h1>AlmazBox Demo</h1>
+        <p>Uma noite de PS2 por nossa conta. Depois você decide.</p>
+      </div>
+      <div class="status-pills">
+        <span class="pill"><span class="dot"></span> Servidor online</span>
+        <span class="pill gold"><i class="fa-solid fa-gift"></i> Grátis</span>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <section class="demo-hero" id="baixar">
+      <div>
+        <span class="demo-kicker"><i></i> Só pra quem está no grupo</span>
+        <h2>Escolha 1 jogo de PS2<br><em>e jogue de graça.</em></h2>
+        <p class="lead2">Baixe o <b>AlmazBox Demo</b>, escolha o seu jogo e ele baixa, instala e abre sozinho. É o mesmo launcher dos clientes, com <b>todos os jogos à vista</b>. Só um fica liberado.</p>
+        <div class="demo-actions">
+          <button class="kbtn gold big" type="button" id="btnDownload"><i class="fa-solid fa-download"></i> Baixar a demo</button>
+          <a class="kbtn glass" href="#como"><i class="fa-solid fa-circle-play"></i> Como funciona</a>
+        </div>
+        <div class="demo-meta">
+          <span><i class="fa-brands fa-windows"></i> Windows 10 e 11</span>
+          <span><i class="fa-solid fa-hard-drive"></i> <b id="dlSize">cerca de 270 MB</b></span>
+          <span><i class="fa-solid fa-gamepad"></i> Controle ou teclado</span>
+        </div>
+        <p class="note-win" id="dlNote" hidden></p>
+        <p class="note-win only-phone"><i class="fa-solid fa-mobile-screen"></i><span>Está no celular? A demo é para <b>Windows</b>. Abra este mesmo link no computador para baixar.</span></p>
+      </div>
+      <div class="wall" id="wall" aria-hidden="true"></div>
+    </section>
+
+    <!-- COMO -->
+    <section class="section" id="como">
+      <div class="section-head"><div><h3>Como jogar em 3 passos</h3><span>Leva uns minutos, o resto é com o launcher.</span></div></div>
+      <div class="how">
+        <div class="how-card">
+          <span class="n">01</span>
+          <div class="ic"><i class="fa-solid fa-download"></i></div>
+          <h4>Instale a demo</h4>
+          <p>Abra o <b>AlmazBox Demo Setup.exe</b>. Se o Windows avisar, clique em <b>Mais informações</b> e depois em <b>Executar assim mesmo</b>.</p>
+        </div>
+        <div class="how-card">
+          <span class="n">02</span>
+          <div class="ic"><i class="fa-solid fa-hand-pointer"></i></div>
+          <h4>Escolha o seu jogo</h4>
+          <p>Na primeira vez aparece a estante de PS2. Escolha <b>1 jogo</b>. A escolha vale pra este computador e não dá pra trocar depois.</p>
+        </div>
+        <div class="how-card">
+          <span class="n">03</span>
+          <div class="ic"><i class="fa-solid fa-play"></i></div>
+          <h4>Baixe e jogue</h4>
+          <p>Clique em <b>Baixar e jogar grátis</b>. O launcher baixa, prepara o emulador e abre o jogo em tela cheia. Controle de Xbox ou PlayStation já funciona.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- JOGOS -->
+    <section class="section" id="jogos">
+      <div class="section-head"><div><h3>Jogos de PS2 pra escolher</h3><span id="ps2Count">Carregando a estante…</span></div></div>
+      <div class="ps2-grid" id="ps2Grid">
+        <div class="ps2-skel"></div><div class="ps2-skel"></div><div class="ps2-skel"></div><div class="ps2-skel"></div><div class="ps2-skel"></div><div class="ps2-skel"></div>
+      </div>
+    </section>
+
+    <!-- OFERTA -->
+    <section class="section" id="oferta">
+      <div class="offer">
+        <div>
+          <span class="demo-kicker"><i></i> Oferta de quem testou</span>
+          <h3>Curtiu a demo?<br><em>Libere o AlmazBox inteiro.</em></h3>
+          <ul>
+            <li><i class="fa-solid fa-check"></i> <span><span id="offerCount">Todos os jogos do catálogo</span>, sem cadeado</span></li>
+            <li><i class="fa-solid fa-check"></i> <span>PS2, PS3, PS4, Xbox e retrô no mesmo launcher</span></li>
+            <li><i class="fa-solid fa-check"></i> <span>Jogo novo entra no catálogo sem pagar de novo</span></li>
+            <li><i class="fa-solid fa-check"></i> <span>Baixa, instala e abre sozinho, igual à demo</span></li>
+          </ul>
+        </div>
+        <div class="price-box">
+          <span class="price-tag">Só pra quem testou</span>
+          <span class="price-old">R$ 69,97</span>
+          <span class="price-new">R$ 49,97</span>
+          <span class="price-once">pagamento único, sem mensalidade</span>
+          <button class="kbtn gold big" type="button" id="btnBuy"><i class="fa-solid fa-unlock"></i> Quero liberar tudo</button>
+          <a class="small" href="https://almazbox-license-service-el2u.onrender.com/membros">Já comprou? Entre na área de membros</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- DÚVIDAS -->
+    <section class="section" id="duvidas">
+      <div class="section-head"><div><h3>Dúvidas rápidas</h3></div></div>
+      <div class="faq">
+        <details><summary>Preciso pagar ou cadastrar alguma coisa? <i class="fa-solid fa-plus"></i></summary><p>Não. A demo é grátis e não pede cadastro, cartão ou chave. Você baixa, escolhe o jogo e joga.</p></details>
+        <details><summary>Posso trocar o jogo depois? <i class="fa-solid fa-plus"></i></summary><p>Não. A demo libera <b>1 jogo por computador</b>, por isso a escolha é definitiva. No AlmazBox completo todos os jogos ficam liberados.</p></details>
+        <details><summary>O Windows mostrou um aviso azul. E agora? <i class="fa-solid fa-plus"></i></summary><p>É o aviso padrão para programas novos. Clique em <b>Mais informações</b> e depois em <b>Executar assim mesmo</b>. Se o antivírus bloquear, libere o AlmazBox Demo e abra de novo.</p></details>
+        <details><summary>Meu controle funciona? <i class="fa-solid fa-plus"></i></summary><p>Sim. Controle de Xbox ou PlayStation, com fio ou Bluetooth. Conecte antes de abrir o jogo. Sem controle, o teclado também funciona.</p></details>
+        <details><summary>Comprei. Como libero o resto? <i class="fa-solid fa-plus"></i></summary><p>Depois do pagamento a sua <b>key</b> chega por e-mail e aparece na <a href="https://almazbox-license-service-el2u.onrender.com/membros">área de membros</a>. Lá você baixa o AlmazBox completo e ativa a key. A demo pode ser desinstalada.</p></details>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Link do checkout com desconto (R$ 49,97). Trocar aqui quando o GGCheckout tiver o link próprio da demo.
+  const CHECKOUT_URL = 'https://ggcheckout.app/checkout/v5/7HJkge1seT28lpd5tNHYgl'
+  const LOCAL_COVERS = ['gta-san-andreas-ps2.jpg', 'bully-ps2.jpg', 'god-of-war-2.jpg', 'resident-evil-4-ps2.jpg', 'dragon-ball-z-budokai-tenkaichi-3-ps2.jpg',
+    'need-for-speed-most-wanted-ps2.jpg', 'gta-vice-city-ps2.jpg', 'naruto-shippuden-ultimate-ninja-5-ps2.jpg', 'pes-2011-ps2.jpg', 'black-ps2.jpg',
+    'god-of-war-1.jpg', 'mortal-kombat-shaolin-monks-ps2.png', 'lego-star-wars-ii-ps2.jpg', 'fifa-street-2-ps2.jpg', 'call-of-duty-3-ps2.jpg']
+    .map((f) => '/assets/covers/' + f)
+
+  // Servidor da área de membros (o primeiro é o principal; o segundo é reserva).
+  const APIS = ['https://almazbox-license-service-el2u.onrender.com', 'https://almazbox-license-service.onrender.com']
+  async function api(path, opts) {
+    let last
+    for (const base of APIS) {
+      try {
+        const res = await fetch(base + path, opts)
+        if (res.status >= 500 || res.status === 404) { last = new Error('HTTP ' + res.status); continue }
+        return res
+      } catch (e) { last = e }
+    }
+    throw last
+  }
+  const utm = location.search.replace(/^\?/, '')
+  function track(type, data) {
+    try { api('/api/v1/demo/event', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ type, data, utm }), keepalive: true }).catch(() => {}) } catch (e) {}
+  }
+  function withUtm(url, content) {
+    const u = new URL(url)
+    u.searchParams.set('utm_source', 'almazbox-demo'); u.searchParams.set('utm_medium', 'pagina-demo')
+    u.searchParams.set('utm_campaign', 'demo-ps2'); u.searchParams.set('utm_content', content)
+    return u.toString()
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) }
+
+  function fillWall(urls) {
+    const list = urls.filter(Boolean).slice(0, 18)
+    if (!list.length) return
+    const cols = [[], [], []]
+    list.forEach((u, i) => cols[i % 3].push(u))
+    document.getElementById('wall').innerHTML = cols.map((c) =>
+      '<div class="wall-col">' + c.concat(c).map((u) => '<img src="' + esc(u) + '" alt="" loading="lazy" decoding="async">').join('') + '</div>').join('')
+  }
+
+  async function loadGames() {
+    fillWall(LOCAL_COVERS)
+    try {
+      const res = await api('/api/v1/demo/games')
+      const data = await res.json()
+      if (!data.ok) throw new Error()
+      const ps2 = data.ps2 || []
+      document.getElementById('ps2Count').textContent = ps2.length + ' jogos de PS2. Você escolhe 1 dentro do launcher.'
+      document.getElementById('ps2Grid').innerHTML = ps2.map((g) =>
+        '<figure>' + (g.coverUrl ? '<img src="' + esc(g.coverUrl) + '" alt="" loading="lazy" decoding="async">' : '<div class="ps2-skel"></div>') +
+        '<figcaption>' + esc(g.title) + '</figcaption></figure>').join('')
+      if (data.total) document.getElementById('offerCount').textContent = 'Os ' + data.total + ' jogos do catálogo'
+      const covers = (data.covers || []).map((c) => c.coverUrl)
+      if (covers.length >= 9) fillWall(covers)
+    } catch (e) {
+      document.getElementById('ps2Count').textContent = 'Os jogos aparecem dentro do launcher.'
+      document.getElementById('ps2Grid').innerHTML = LOCAL_COVERS.map((u) => '<figure><img src="' + esc(u) + '" alt="" loading="lazy"></figure>').join('')
+    }
+  }
+
+  document.getElementById('btnDownload').addEventListener('click', async () => {
+    const btn = document.getElementById('btnDownload')
+    const note = document.getElementById('dlNote')
+    btn.disabled = true
+    const old = btn.innerHTML
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparando o download…'
+    try {
+      const res = await api('/api/v1/demo/installer?src=hero')
+      const data = await res.json()
+      if (!data.ok || !data.url) throw new Error(data.message || 'erro')
+      location.href = data.url
+      note.innerHTML = '<i class="fa-solid fa-circle-info"></i><span>O download começou. Abra o arquivo quando terminar. Se o Windows avisar, clique em <b>Mais informações</b> e em <b>Executar assim mesmo</b>.</span>'
+    } catch (e) {
+      note.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i><span>Não deu pra gerar o download agora. Tente de novo em alguns segundos ou chame o suporte no grupo.</span>'
+    }
+    note.hidden = false
+    btn.disabled = false
+    btn.innerHTML = old
+  })
+
+  document.getElementById('btnBuy').addEventListener('click', () => {
+    track('page_cta', { from: 'oferta' })
+    window.open(withUtm(CHECKOUT_URL, 'oferta'), '_blank', 'noopener')
+  })
+
+  // Menu lateral acompanha a seção visível.
+  const links = [...document.querySelectorAll('.nav a[data-nav]')]
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return
+      links.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id))
+    })
+  }, { rootMargin: '-45% 0px -50% 0px' })
+  ;['baixar', 'como', 'jogos', 'oferta', 'duvidas'].forEach((id) => { const el = document.getElementById(id); if (el) io.observe(el) })
+
+  track('page_view')
+  loadGames()
+</script>
+</body>
+</html>
