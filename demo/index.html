@@ -312,6 +312,22 @@
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) }
 
+  // Capas de PS2 que já moram no site (a API não manda capa desses jogos).
+  const PS2_COVERS = {
+    'black': 'black-ps2.jpg', 'bully-ps2': 'bully-ps2.jpg', 'call-of-duty-3-ps2': 'call-of-duty-3-ps2.jpg',
+    'dragon-ball-z-budokai-tenkaichi-3': 'dragon-ball-z-budokai-tenkaichi-3-ps2.jpg', 'dragon-ball-z-infinite-world-ps2': 'dragon-ball-z-infinite-world-ps2.jpg',
+    'fifa-street-2-ps2': 'fifa-street-2-ps2.jpg', 'god-of-war-2': 'god-of-war-2.jpg', 'god-of-war-1': 'god-of-war-1.jpg',
+    'grand-theft-auto-san-andreas-ps2': 'gta-san-andreas-ps2.jpg', 'grand-theft-auto-vice-city-ps2': 'gta-vice-city-ps2.jpg',
+    'grand-theft-auto-liberty-city-stories-ps2': 'gta-liberty-city-stories-ps2.jpg', 'mortal-kombat-shaolin-monks-ps2': 'mortal-kombat-shaolin-monks-ps2.jpg',
+    'naruto-ultimate-ninja-3-ps2': 'naruto-ultimate-ninja-3-ps2.jpg', 'naruto-shippuden-ultimate-ninja-4-ps2': 'naruto-shippuden-ultimate-ninja-4-ps2.jpg',
+    'naruto-shippuden-ultimate-ninja-5': 'naruto-shippuden-ultimate-ninja-5-ps2.jpg', 'need-for-speed-most-wanted-ps2': 'need-for-speed-most-wanted-ps2.jpg',
+    'need-for-speed-underground-2-ps2': 'nfs-underground-2.webp', 'pro-evolution-soccer-2011-ps2': 'pes-2011-ps2.jpg',
+    'resident-evil-4-ps2': 'resident-evil-4-ps2.jpg', 'wwe-here-comes-the-pain-ps2': 'wwe-smackdown-here-comes-the-pain-ps2.jpg',
+    'lego-star-wars-the-video-game-ps2': 'lego-star-wars-ps2.jpg', 'lego-star-wars-ii-the-original-trilogy-ps2': 'lego-star-wars-ii-ps2.jpg',
+    'star-wars-battlefront-ii-ps2': 'star-wars-battlefront-ii-ps2.jpg',
+  }
+  const coverOf = (g) => g.coverUrl || (PS2_COVERS[g.gameId] ? '/assets/covers/' + PS2_COVERS[g.gameId] : null)
+
   function fillWall(urls) {
     const list = urls.filter(Boolean).slice(0, 18)
     if (!list.length) return
@@ -330,11 +346,12 @@
       const ps2 = data.ps2 || []
       document.getElementById('ps2Count').textContent = ps2.length + ' jogos de PS2. Você escolhe 1 dentro do launcher.'
       document.getElementById('ps2Grid').innerHTML = ps2.map((g) =>
-        '<figure>' + (g.coverUrl ? '<img src="' + esc(g.coverUrl) + '" alt="" loading="lazy" decoding="async">' : '<div class="ps2-skel"></div>') +
+        '<figure>' + (coverOf(g) ? '<img src="' + esc(coverOf(g)) + '" alt="" loading="lazy" decoding="async">' : '<div class="ps2-skel"></div>') +
         '<figcaption>' + esc(g.title) + '</figcaption></figure>').join('')
       if (data.total) document.getElementById('offerCount').textContent = 'Os ' + data.total + ' jogos do catálogo'
-      const covers = (data.covers || []).map((c) => c.coverUrl)
-      if (covers.length >= 9) fillWall(covers)
+      // A parede fica com as capas de PS2 (caixas em pé), as mesmas que o cliente escolhe.
+      const wall = ps2.map(coverOf).filter(Boolean)
+      if (wall.length >= 9) fillWall(wall)
     } catch (e) {
       document.getElementById('ps2Count').textContent = 'Os jogos aparecem dentro do launcher.'
       document.getElementById('ps2Grid').innerHTML = LOCAL_COVERS.map((u) => '<figure><img src="' + esc(u) + '" alt="" loading="lazy"></figure>').join('')
